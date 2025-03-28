@@ -36,7 +36,7 @@ export function registerSendCodeRoute(app: OpenAPIHono) {
             method: 'POST',
             body: {
                 mobilePhoneNumber: body.mobilePhoneNumber,
-                areaCode: body.areaCode
+                areaCode: body.areaCode || '+86'
             }
         })
         return c.json(res);
