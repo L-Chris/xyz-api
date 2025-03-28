@@ -20,7 +20,7 @@ export const request = async (config: {
     body?: Record<string,any>
     headers?: RequestInit['headers']
 }) => {
-    const url = new URL(BASE_URL + '/' + config.url)
+    const url = new URL(BASE_URL + config.url)
     if (config.params) {
         for (const key in config.params) {
             url.searchParams.append(key, String(config.params[key]));
