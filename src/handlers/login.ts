@@ -1,0 +1,91 @@
+import { createRoute, OpenAPIHono, z } from "@hono/zod-openapi";
+import { request } from "../utils/http.ts";
+
+export function registerLoginRoute(app: OpenAPIHono) {
+    const route = createRoute({
+        method: 'post' as const,
+        path: '/login',
+        operationId: 'login',
+        summary: '登录认证',
+        request: {
+            body: {
+                content: {
+                    'application/json': {
+                        schema: z.object({
+                            mobilePhoneNumber: z.string(),
+                            verifyCode: z.string(),
+                            areaCode: z.string().optional().default("+86")
+                        })
+                    }
+                }
+            }
+        },
+        responses: {
+            200: {
+                description: 'ok',
+                content: {
+                    'application/json': { schema: z.any() }
+                }
+            },
+            400: {
+                description: 'ok',
+                content: {
+                    'application/json': { schema: z.any() }
+                }
+            },
+            500: {
+                description: 'ok',
+                content: {
+                    'application/json': { schema: z.any() }
+                }
+            }
+        }
+    })
+
+    app.openapi(route, async (c) => {
+        const body = await c.req.json();
+        
+        if (!body.verifyCode || !body.mobilePhoneNumber) {
+            return c.json({
+                code: 400,
+                msg: "参数错误",
+                data: null
+            }, 400);
+        }
+
+        try {
+            const res = await request({
+                url: '/v1/auth/loginOrSignUpWithSMS',
+                method: 'POST',
+                headers: {
+                    "abtest-info": "{\"old_user_discovery_feed\":\"enable\"}",
+                },
+                body: {
+                    mobilePhoneNumber: body.mobilePhoneNumber,
+                    verifyCode: body.verifyCode,
+                    areaCode: body.areaCode || '+86'
+                }
+            });
+
+            const data = await res.json()
+
+            return c.json({
+                code: 200,
+                msg: "success",
+                data: {
+                    data: data,
+                    'x-jike-access-token': res.headers.get('x-jike-access-token') || '',
+                    'x-jike-refresh-token': res.headers.get('x-jike-refresh-token') || ''
+                }
+            });
+        } catch (error: unknown) {
+            console.error("登录请求失败:", error);
+            const errorMessage = error instanceof Error ? error.message : "未知错误";
+            return c.json({
+                code: 500,
+                msg: "服务器错误",
+                data: errorMessage
+            }, 500);
+        }
+    })
+}

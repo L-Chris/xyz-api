@@ -39,6 +39,7 @@ export function registerSendCodeRoute(app: OpenAPIHono) {
                 areaCode: body.areaCode || '+86'
             }
         })
-        return c.json(res);
+        const data = await res.json()
+        return c.json(data);
     })
 }

@@ -54,5 +54,5 @@ export const request = async (config: {
         body: config.body ? JSON.stringify(config.body) : '',
     })
 
-    return req.json()
+    return req
 }
